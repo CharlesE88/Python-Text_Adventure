@@ -1,18 +1,21 @@
 import sys
 import os
 import random
+import json
 
 intro1 = '''THE UNKNOWN FUTURE
 BY: CHARLES EUDY
-3/28/20016'''
+3/28/2013'''
 intro2 = '''HELLO!! GET UP... CAN YOU HEAR ME... GET UP!!'''
-intro3 = '''Hi %s My name is Charles your are sleeping on my floor'''
-intro4 = '''How did you get here? Well that doesn't matter. Anyway I can help you find your way around
-I haven't seen clothes like that before only in magazines. what year are you from?'''
-intro5 = '''WHY! %s what a very long time ago. Well welcome to the year 3072!'''
-intro6 = '''Well %s in the future a lot has changed. There are zombies everywhere. I have given you some
-gear to put on to help you with your journey. The gear contains your stats, like health and attack power
-you can get more stats by killing zombies.'''
+intro3 = '''Hi %s. My name is Charles. You are sleeping on my floor.'''
+intro4 = '''How did you get here? Well, that doesn't matter. Anyway, I can help you find your way around.
+I haven't seen clothes like that before, only in magazines. What year are you from?'''
+intro5 = '''Why, %s? That was a very long time ago. Well, welcome to the year 3072!'''
+intro6 = '''Well, %s, in the future, a lot has changed. There are zombies everywhere. I have given you some
+gear to put on to help you with your journey. The gear contains your stats, like health and attack power.
+You can get more stats by killing zombies.'''
+
+SAVE_FILE = "savegame.json"
 
 weaponList = {"Rusty Knife": {"Gold": 2, "Attack": 10}, "Rusty Dagger": {"Gold": 5, "Attack": 7},
               "Rusty ShortSword": {"Gold": 7, "Attack": 10}, "Rusty LongSword": {"Gold": 7, "Attack": 13},
@@ -32,7 +35,7 @@ class Player:
         self.gold = 30
         self.pots = 0
         self.weap = ["Rusty Knife"]
-        self.currentweap = ["Rusty Knife"]
+        self.currentweap = "Rusty Knife"
 
     @property
     def attack(self):
@@ -103,17 +106,81 @@ class StrayDog:
 StrayDogID = StrayDog("StrayDog")
 
 
+def save_game():
+    save_data = {
+        "name": playerID.name,
+        "maxhealth": playerID.maxhealth,
+        "health": playerID.health,
+        "attackpower": playerID.attackpower,
+        "level": playerID.level,
+        "maxlevel": playerID.maxlevel,
+        "experience": playerID.experience,
+        "maxexperience": playerID.maxexperience,
+        "gold": playerID.gold,
+        "pots": playerID.pots,
+        "weap": playerID.weap,
+        "currentweap": playerID.currentweap
+    }
+
+    with open(SAVE_FILE, "w") as save_file:
+        json.dump(save_data, save_file)
+    print("Game saved.")
+    input("Press Enter")
+    start2()
+
+
+def load_game():
+    global playerID
+    if not os.path.exists(SAVE_FILE):
+        print("No save file found.")
+        input("Press Enter")
+        main()
+        return
+
+    try:
+        with open(SAVE_FILE, "r") as save_file:
+            save_data = json.load(save_file)
+    except (ValueError, OSError):
+        print("Save file is invalid or could not be read.")
+        input("Press Enter")
+        main()
+        return
+
+    try:
+        playerID = Player(save_data["name"])
+        playerID.maxhealth = save_data["maxhealth"]
+        playerID.health = save_data["health"]
+        playerID.attackpower = save_data["attackpower"]
+        playerID.level = save_data["level"]
+        playerID.maxlevel = save_data["maxlevel"]
+        playerID.experience = save_data["experience"]
+        playerID.maxexperience = save_data["maxexperience"]
+        playerID.gold = save_data["gold"]
+        playerID.pots = save_data["pots"]
+        playerID.weap = save_data["weap"]
+        playerID.currentweap = save_data["currentweap"]
+    except (KeyError, TypeError):
+        print("Save data is missing required values.")
+        input("Press Enter")
+        main()
+        return
+
+    print("Game loaded.")
+    input("Press Enter")
+    start2()
+
+
 def main():
     os.system('cls')
     print(intro1)
     print('1: Start')
     print('2: Load')
     print('3: Exit')
-    option = input('What would you like to do?')
+    option = input('What would you like to do? ')
     if option == "1":
         start()
     elif option == "2":
-        main()
+        load_game()
     elif option == "3":
         sys.exit()
     else:
@@ -123,8 +190,8 @@ def main():
 def start():
     os.system('cls')
     print(intro2)
-    print("Hello what is your name?")
-    option = input('Enter Name?')
+    print("Hello, what is your name?")
+    option = input('Enter name: ')
     global playerID
     playerID = Player(option)
     start1()
@@ -134,7 +201,7 @@ def start1():
     global option
     print(intro3 % playerID.name)
     print(intro4)
-    year = input('Type what year')
+    year = input('Type what year: ')
     print(intro5 % year)
     print(intro6 % playerID.name)
     print('Name: %s' % playerID.name)
@@ -150,7 +217,7 @@ def start1():
 
 def start2():
     global option
-    print('Where would you like to go? ')
+    print('Where would you like to go?')
     print('1.) Explore')
     print('2.) Fight')
     print('3.) Store')
@@ -165,7 +232,7 @@ def start2():
     elif option == '3':
         store()
     elif option == '4':
-        pass
+        save_game()
     elif option == '5':
         sys.exit()
     else:
@@ -192,10 +259,10 @@ def explore():
 
 
 def theCity():
-    print('You find a sign that says beware Enter if you are strong enough!')
-    print('1.) ENTER the city')
+    print('You find a sign that says, "Beware. Enter if you are strong enough!"')
+    print('1.) Enter the city')
     print('2.) Explore somewhere else')
-    option = input('What would you like to do %s' % playerID.name)
+    option = input('What would you like to do, %s? ' % playerID.name)
     if option == '1':
         cityEntrance()
     elif option == '2':
@@ -216,7 +283,7 @@ def walk():
 
 
 def goback():
-    print("Did you get scared? Go see what's going on outside")
+    print("Did you get scared? Go see what is going on outside.")
     start2()
 
 
@@ -247,7 +314,7 @@ def prefight():
 def fight():
     global option
     print(" %s        VS          %s " % (playerID.name, enemy.name))
-    print(" %s Health %i/%i     %s health %i/%i" % (
+    print(" %s Health %i/%i     %s Health %i/%i" % (
     playerID.name, playerID.health, playerID.maxhealth, enemy.name, enemy.health, enemy.maxhealth))
     print('1.) Attack')
     print('2.) Backpack')
@@ -315,7 +382,7 @@ def clothes():
 
 def potionList():
     print('You have %i potions ' % playerID.pots)
-    print('1.) Goback')
+    print('1.) Go back')
     option = input('What would you like to do?')
     if option == '1':
         backpack()
@@ -324,7 +391,7 @@ def potionList():
 def drinkPotion():
     global option
     if playerID.pots == 0:
-        print("Sorry.."
+        print("Sorry."
               " You don't have any potions!")
     else:
         playerID.health += 50
@@ -385,18 +452,18 @@ def store():
     print(''' +++++++++++++++++++++++++
               +-------Charles's-------+
               +---------SHOP----------+
-              +---LOW PRICE'S DAILY---+
+              +---LOW PRICES DAILY----+
               +++++++++++++++++++++++++ ''')
-    print("Go Ahead check out my gear in stock")
+    print("Go ahead, check out my gear in stock.")
     print("Rusty Knife")
     print("Rusty Dagger")
     print("Rusty ShortSword")
     print("Rusty LongSword")
     print("Rusty GreatSword")
-    option = input("Type the item would you like to buy?")
+    option = input("Type the item you would like to buy: ")
     if option in weaponList:
-        if playerID.gold >= weaponList[option]:
-            playerID.gold -= weaponList[option]
+        if playerID.gold >= weaponList[option]["Gold"]:
+            playerID.gold -= weaponList[option]["Gold"]
             playerID.weap.append(option)
             print("You have bought %s" % option)
             start1()
@@ -404,7 +471,7 @@ def store():
             print("You don't have enough gold")
             start1()
     else:
-        print("I don't have that item in my inventory.. Sorry")
+        print("I don't have that item in my inventory. Sorry.")
         start1()
 
 
